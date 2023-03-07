@@ -6,8 +6,8 @@ import requests
 url = 'https://fki.tic.heia-fr.ch/static/img/a01-122-02-00.jpg'
 image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
 
-processor = TrOCRProcessor.from_pretrained('microsoft/trocr-small-handwritten')
-model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-small-handwritten')
+processor = TrOCRProcessor.from_pretrained('microsoft/trocr-base-handwritten')
+model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-base-handwritten')
 pixel_values = processor(images=image, return_tensors="pt").pixel_values
 
 generated_ids = model.generate(pixel_values)

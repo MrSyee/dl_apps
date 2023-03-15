@@ -6,6 +6,7 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 # url = 'https://fki.tic.heia-fr.ch/static/img/a01-122-02-00.jpg'
 # image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
 image = Image.open("samples/Red.png").convert("RGB")
+print(type(image))
 
 processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
 model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")

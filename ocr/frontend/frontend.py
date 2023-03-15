@@ -2,10 +2,10 @@ import json
 import os
 import urllib
 
-import pyperclip
 import requests
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
+from PIL import Image
 
 if os.environ.get("BACKEND_URL") is not None:
     BACKEND_URL = str(os.environ.get("BACKEND_URL"))
@@ -31,23 +31,23 @@ CanvasResult = st_canvas(
 )
 
 if CanvasResult.image_data is not None:
-    img = CanvasResult.image_data.astype("uint8")
+    img_array = CanvasResult.image_data.astype("uint8")
 
 text_value = ""
 if st.button("Predict"):
     try:
-        text_value = "Predict!"
-        # response_predict = requests.post(
-        #     url=PREDICT_URL,
-        #     data=json.dumps({"image": img.tolist()}),
-        # )
+        response_predict = requests.post(
+            url=PREDICT_URL,
+            data=json.dumps({"image": img_array.tolist()}),
+        )
 
-        # if response_predict.ok:
-        #     res = response_predict.json()
-        #     st.write(f"Prediction: {res['label']}")
-        # else:
-        #     st.write("Some error occured")
+        print("response_predict: ", response_predict)
+        res = response_predict.json()
+        print("res: ", res)
+        text_value = res['text']
+        st.write(f"Prediction: {res['text']}")
 
     except ConnectionError:
         st.write("Couldn't reach backend")
+
 st.text_area("Result", text_value)

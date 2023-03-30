@@ -25,7 +25,6 @@ def healthcheck() -> bool:
 @app.post("/infer", response_model=OCRResponse, status_code=200)
 async def infer(file: UploadFile) -> OCRResponse:
     """Inference model."""
-    print(file)
     image = Image.open(file.file).convert("RGB")
     text = inferencer.inference(image)
 

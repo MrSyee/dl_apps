@@ -11,6 +11,7 @@ class TrOCRInferencer:
         self.model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")
 
     def inference(self, image: Image) -> str:
+        """Inference using model."""
         pixel_values = self.processor(images=image, return_tensors="pt").pixel_values
 
         generated_ids = self.model.generate(pixel_values)

@@ -39,6 +39,7 @@ CanvasResult = st_canvas(
 if CanvasResult.image_data is not None:
     img_array = CanvasResult.image_data.astype("uint8")
 
+# Predict image to text
 text_value = ""
 if st.button("Predict"):
     try:
@@ -61,7 +62,6 @@ if st.button("Predict"):
         # Get text
         res = response_predict.json()
         text_value = res['text']
-        st.write(f"Prediction: {res['text']}")
 
     except ConnectionError:
         st.write("Couldn't reach backend")

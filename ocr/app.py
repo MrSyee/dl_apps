@@ -37,7 +37,7 @@ def image_to_text(image: np.ndarray) -> str:
 
 
 # Set gradio app
-with gr.Blocks() as app:
+with gr.Blocks() as demo:
     name = gr.Sketchpad(label="Handwritten", shape=(600, 192), brush_radius=2)
     output = gr.Textbox(label="Output Box")
     convert_btn = gr.Button("Convert")
@@ -47,4 +47,4 @@ with gr.Blocks() as app:
 
 
 if __name__ == "__main__":
-    app.launch()
+    demo.launch()

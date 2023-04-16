@@ -14,7 +14,3 @@ python-multipart          == 0.0.6
 streamlit                 == 1.19.0
 streamlit-drawable-canvas == 0.9.2
 gradio                    == 3.27.0
-
-# formatter
-isort                     == 5.10.1
-black                     == 22.3.0

@@ -2,10 +2,9 @@
 
 import utils
 from fastapi import FastAPI, UploadFile
-from PIL import Image
-
-from tasks import TrOCRInferencer
 from models import OCRResponse
+from PIL import Image
+from tasks import TrOCRInferencer
 
 app = FastAPI()
 logger = utils.get_logger()

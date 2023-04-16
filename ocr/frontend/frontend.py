@@ -1,13 +1,11 @@
-import json
+import io
 import os
 import urllib
 
 import requests
 import streamlit as st
-from streamlit_drawable_canvas import st_canvas
 from PIL import Image
-import io
-import numpy as np
+from streamlit_drawable_canvas import st_canvas
 
 if os.environ.get("BACKEND_URL") is not None:
     BACKEND_URL = str(os.environ.get("BACKEND_URL"))
@@ -61,7 +59,7 @@ if st.button("Predict"):
 
         # Get text
         res = response_predict.json()
-        text_value = res['text']
+        text_value = res["text"]
 
     except ConnectionError:
         st.write("Couldn't reach backend")

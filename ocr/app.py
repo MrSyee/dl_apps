@@ -35,7 +35,7 @@ inferencer = TrOCRInferencer()
 def image_to_text(image: np.ndarray) -> str:
     image = Image.fromarray(image).convert("RGB")
     # NOTE: Can't save in colab
-    # image.save("inputs/canvas.png", format="PNG")
+    image.save("inputs/canvas.png", format="PNG")
     text = inferencer.inference(image)
     return text
 
@@ -56,6 +56,8 @@ with gr.Blocks() as app:
             examples=[
                 os.path.join(os.path.dirname(__file__), "examples/Red.png"),
                 os.path.join(os.path.dirname(__file__), "examples/sentence.png"),
+                os.path.join(os.path.dirname(__file__), "examples/Rock.png"),
+                os.path.join(os.path.dirname(__file__), "examples/Bob.png"),
             ],
             inputs=image,
             outputs=output,

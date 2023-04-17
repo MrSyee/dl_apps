@@ -1,4 +1,3 @@
-import requests
 from PIL import Image
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
@@ -6,9 +5,9 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 image = Image.open("examples/Red.png").convert("RGB")
 
 print("[INFO] Load pretrained TrOCRProcessor")
-processor = TrOCRProcessor.from_pretrained("microsoft/trocr-large-handwritten")
+processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
 print("[INFO] Load pretrained VisionEncoderDecoderModel")
-model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-large-handwritten")
+model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")
 
 print("[INFO] Preprocess")
 pixel_values = processor(images=image, return_tensors="pt").pixel_values

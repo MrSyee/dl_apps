@@ -11,10 +11,10 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 class TrOCRInferencer:
     def __init__(self):
         self.processor = TrOCRProcessor.from_pretrained(
-            "microsoft/trocr-large-handwritten"
+            "microsoft/trocr-base-handwritten"
         )
         self.model = VisionEncoderDecoderModel.from_pretrained(
-            "microsoft/trocr-large-handwritten"
+            "microsoft/trocr-base-handwritten"
         )
 
     def inference(self, image: Image) -> str:

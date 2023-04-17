@@ -3,5 +3,23 @@
 
 ![handwritten](https://user-images.githubusercontent.com/17582508/232518948-d67882c6-1bf1-4110-a9b4-6d6fd699a270.gif)
 
-# Reference
+## Prerequisite
+- python: 3.9+
+
+## Setup
+Prepare python a Python virtual environment such as anaconda or pyenv.
+
+And install requirments.
+```
+make setup
+```
+
+## Run
+Run app using gradio.
+```
+python app.py
+```
+Running on https://localhost:7860/.
+
+## Reference
 - https://huggingface.co/microsoft/trocr-base-handwritten

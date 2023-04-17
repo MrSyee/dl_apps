@@ -56,6 +56,8 @@ with gr.Blocks() as app:
             examples=[
                 os.path.join(os.path.dirname(__file__), "examples/Red.png"),
                 os.path.join(os.path.dirname(__file__), "examples/sentence.png"),
+                os.path.join(os.path.dirname(__file__), "examples/i_love_you.png"),
+                os.path.join(os.path.dirname(__file__), "examples/merrychristmas.png"),
                 os.path.join(os.path.dirname(__file__), "examples/Rock.png"),
                 os.path.join(os.path.dirname(__file__), "examples/Bob.png"),
             ],

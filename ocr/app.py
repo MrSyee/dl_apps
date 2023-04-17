@@ -1,4 +1,7 @@
+"""Handwritten image OCR App."""
+
 import os
+
 import gradio as gr
 import numpy as np
 from PIL import Image
@@ -51,8 +54,8 @@ with gr.Blocks() as app:
         gr.Markdown("## Image Examples")
         gr.Examples(
             examples=[
-                os.path.join(os.path.dirname(__file__), "examples/sentence.png"),
                 os.path.join(os.path.dirname(__file__), "examples/Red.png"),
+                os.path.join(os.path.dirname(__file__), "examples/sentence.png"),
             ],
             inputs=image,
             outputs=output,
@@ -60,7 +63,12 @@ with gr.Blocks() as app:
         )
 
     with gr.Tab("Drawing"):
-        sketchpad = gr.Sketchpad(label="Handwritten Sketchpad", shape=(600, 192), brush_radius=2, invert_colors=False)
+        sketchpad = gr.Sketchpad(
+            label="Handwritten Sketchpad",
+            shape=(600, 192),
+            brush_radius=2,
+            invert_colors=False,
+        )
         output = gr.Textbox(label="Output Box")
         convert_btn = gr.Button("Convert")
         convert_btn.click(

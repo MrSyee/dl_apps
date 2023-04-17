@@ -1,6 +1,6 @@
 # model
 pillow                    == 9.0.0
-torch                     == 1.13.1
+torch                     == 2.0.0
 transformers              == 4.26.1
 sentencepiece             == 0.1.97
 protobuf                  == 3.20.0

@@ -35,7 +35,7 @@ inferencer = TrOCRInferencer()
 def image_to_text(image: np.ndarray) -> str:
     image = Image.fromarray(image).convert("RGB")
     # NOTE: Can't save in colab
-    image.save("inputs/canvas.png", format="PNG")
+    # image.save("inputs/canvas.png", format="PNG")
     text = inferencer.inference(image)
     return text
 

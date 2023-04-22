@@ -6,7 +6,7 @@ with gr.Blocks() as demo:
         input_img = gr.Image(label="Input")
 
     def get_coords(evt: gr.SelectData):
-        return f"(x, y): ({evt.index[1]}, {evt.index[0]})"
+        return f"({evt.index[1]}, {evt.index[0]})"
 
     input_img.select(get_coords, None, coords)
 

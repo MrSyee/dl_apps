@@ -51,11 +51,12 @@ inferencer = SAMInferencer(
 
 def draw_contour(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     # draw contour
+    contour_image = image.copy()
     contours, _ = cv2.findContours(
         np.uint8(mask), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )
-    cv2.drawContours(image, contours, -1, (0, 0, 255), 3)
-    return image
+    cv2.drawContours(contour_image, contours, -1, (0, 0, 255), 3)
+    return contour_image, contours
 
 
 with gr.Blocks() as demo:
@@ -65,6 +66,8 @@ with gr.Blocks() as demo:
     with gr.Row():
         input_img = gr.Image(label="Input image").style(height=1000, width=1000)
         output_img = gr.Image(label="Output image").style(height=1000, width=1000)
+
+    extract_btn = gr.Button("Extract")
 
     def extract_object_by_click(image: np.ndarray, evt: gr.SelectData):
         print("image: ", image.shape)
@@ -76,12 +79,18 @@ with gr.Blocks() as demo:
         points_labels = np.array([1])
         mask = inferencer.inference(image, point_coords, points_labels)
         print("mask: ", mask.shape)
-        output_image = draw_contour(image, mask)
+        output_image, contours = draw_contour(image, mask)
         print("output_image: ", output_image.shape)
         output_image_pil = Image.fromarray(output_image).convert("RGB")
         output_image_pil.save("inputs/contour.png", format="PNG")
 
-        return output_image
+        # Extract object
+        mask = np.zeros_like(image)
+        cv2.fillPoly(mask, contours, (255, 255, 255))
+        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+        result = cv2.bitwise_and(image, image, mask=mask)
+
+        return result
 
     def get_coords(evt: gr.SelectData):
         return f"(x, y): ({evt.index[1]}, {evt.index[0]})"

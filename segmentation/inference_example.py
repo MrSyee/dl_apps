@@ -10,7 +10,7 @@ import torch
 import numpy as np
 import cv2
 import PIL
-from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry
+from segment_anything import SamPredictor, sam_model_registry
 
 CHECKPOINT_PATH = os.path.join("checkpoint")
 CHECKPOINT_NAME = "sam_vit_h_4b8939.pth"

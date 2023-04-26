@@ -2,11 +2,11 @@ import os
 import urllib
 
 import cv2
-import torch
 import gradio as gr
 import numpy as np
-from segment_anything import SamPredictor, sam_model_registry
+import torch
 from PIL import Image
+from segment_anything import SamPredictor, sam_model_registry
 
 CHECKPOINT_PATH = os.path.join("checkpoint")
 CHECKPOINT_NAME = "sam_vit_h_4b8939.pth"
@@ -17,13 +17,13 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class SAMInferencer:
     def __init__(
-            self,
-            checkpoint_path: str,
-            checkpoint_name: str,
-            checkpoint_url: str,
-            model_type: str,
-            device: torch.device,
-        ):
+        self,
+        checkpoint_path: str,
+        checkpoint_name: str,
+        checkpoint_url: str,
+        model_type: str,
+        device: torch.device,
+    ):
         print("[INFO] Initailize inferencer")
         if not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path, exist_ok=True)
@@ -34,15 +34,16 @@ class SAMInferencer:
         self.predictor = SamPredictor(sam)
 
     def inference(
-            self,
-            image: np.ndarray,
-            point_coords: np.ndarray,
-            points_labels: np.ndarray,
-        ) -> np.ndarray:
+        self,
+        image: np.ndarray,
+        point_coords: np.ndarray,
+        points_labels: np.ndarray,
+    ) -> np.ndarray:
         self.predictor.set_image(image)
         masks, _, _ = self.predictor.predict(point_coords, points_labels)
         merged_mask = np.logical_or.reduce(masks, axis=0)
         return merged_mask
+
 
 inferencer = SAMInferencer(
     CHECKPOINT_PATH, CHECKPOINT_NAME, CHECKPOINT_URL, MODEL_TYPE, DEVICE
@@ -59,9 +60,7 @@ def draw_contour(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return contour_image, contours
 
 
-def extract_object(
-    image: np.ndarray, point_h: int, point_w: int, point_label: int
-):
+def extract_object(image: np.ndarray, point_h: int, point_w: int, point_label: int):
     point_coords = np.array([[point_h, point_w]])
     point_label = np.array([point_label])
     # image_pil = Image.fromarray(image).convert("RGB")
@@ -80,6 +79,7 @@ def extract_object(
     segmented_image = cv2.bitwise_and(image, image, mask=mask)
 
     return segmented_image
+
 
 def extract_object_by_event(image: np.ndarray, evt: gr.SelectData):
     click_h, click_w = evt.index
@@ -107,8 +107,6 @@ with gr.Blocks() as demo:
 
     input_img.select(extract_object_by_event, [input_img], output_img)
     input_img.select(get_coords, None, coords)
-
-
 
     gr.Markdown("## Image Examples")
     gr.Examples(

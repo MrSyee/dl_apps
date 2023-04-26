@@ -6,10 +6,10 @@ Simple Segment Anything(SAM) inference code.
 import os
 import urllib
 
-import torch
-import numpy as np
 import cv2
+import numpy as np
 import PIL
+import torch
 from segment_anything import SamPredictor, sam_model_registry
 
 CHECKPOINT_PATH = os.path.join("checkpoint")
@@ -21,6 +21,7 @@ IMAGE_PATH = "examples/dog.jpg"
 OUTPUT_PATH = "outputs/output.jpg"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def adjust_image_size(image: np.ndarray) -> np.ndarray:
     height, width = image.shape[:2]
     if height > width:
@@ -31,6 +32,7 @@ def adjust_image_size(image: np.ndarray) -> np.ndarray:
             height, width = int(MAX_WIDTH / width * height), MAX_WIDTH
     image = cv2.resize(image, (width, height))
     return image
+
 
 def draw_contour(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     # draw contour
@@ -60,7 +62,6 @@ def main():
     image = adjust_image_size(image)
     print("adjust image size: ", image.shape)
 
-
     # Set points
     point_coords = np.array([[450, 390]])
     points_labels = np.array([1])
@@ -75,13 +76,16 @@ def main():
 
     # Draw contour of mask
     image = draw_contour(image, merged_mask)
-    image = cv2.circle(image, point_coords[0], radius=15, color=(0, 215, 255), thickness=-1)
+    image = cv2.circle(
+        image, point_coords[0], radius=15, color=(0, 215, 255), thickness=-1
+    )
 
     # Save results
     print("[INFO] Save results")
     os.makedirs(CHECKPOINT_PATH, exist_ok=True)
     image = PIL.Image.fromarray(image)
     image.save(OUTPUT_PATH)
+
 
 if __name__ == "__main__":
     main()

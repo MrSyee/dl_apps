@@ -73,9 +73,7 @@ def extract_object(image: np.ndarray, point_h: int, point_w: int, point_label: i
     # overlay_image_pil.save("inputs/contour.png", format="PNG")
 
     # Extract object
-    mask = np.zeros_like(image)
-    cv2.fillPoly(mask, contours, (255, 255, 255))
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    mask = mask.astype(np.uint8) * 255
     segmented_image = cv2.bitwise_and(image, image, mask=mask)
 
     return segmented_image
@@ -88,25 +86,23 @@ def extract_object_by_event(image: np.ndarray, evt: gr.SelectData):
 
 
 def get_coords(evt: gr.SelectData):
-    return f"(h, w): ({evt.index[0]}, {evt.index[1]})"
+    return evt.index[0], evt.index[1]
 
 
+print("[INFO] Gradio app ready")
 with gr.Blocks() as demo:
     gr.Markdown("# Interactive Extracting Object from Image")
-    coords = gr.Textbox(label="Mouse coords")
     with gr.Row():
         coord_h = gr.Number(label="Mouse coords h")
         coord_w = gr.Number(label="Mouse coords w")
         click_label = gr.Number(label="label")
 
     with gr.Row():
-        input_img = gr.Image(label="Input image").style(height=1000, width=1000)
-        output_img = gr.Image(label="Output image").style(height=1000, width=1000)
-
-    extract_btn = gr.Button("Extract")
+        input_img = gr.Image(label="Input image").style(height=600)
+        output_img = gr.Image(label="Output image").style(height=600)
 
     input_img.select(extract_object_by_event, [input_img], output_img)
-    input_img.select(get_coords, None, coords)
+    input_img.select(get_coords, None, [coord_h, coord_w])
 
     gr.Markdown("## Image Examples")
     gr.Examples(

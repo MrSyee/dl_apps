@@ -17,7 +17,7 @@ CHECKPOINT_NAME = "sam_vit_h_4b8939.pth"
 CHECKPOINT_URL = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
 MODEL_TYPE = "default"
 MAX_WIDTH = MAX_HEIGHT = 1024
-IMAGE_PATH = "examples/minji4.jpg"
+IMAGE_PATH = "examples/dog.jpg"
 OUTPUT_PATH = "outputs/output.jpg"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -62,7 +62,7 @@ def main():
 
 
     # Set points
-    point_coords = np.array([[340, 390]])
+    point_coords = np.array([[450, 390]])
     points_labels = np.array([1])
     print("coords: ", point_coords.shape)
     print("labels: ", points_labels.shape)

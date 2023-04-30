@@ -3,7 +3,7 @@ setup:
 
 # dev
 setup-dev:
-	pip install -r requirements-dev.txt
+	pip install -r ../requirements-dev.txt
 
 format:
 	black .

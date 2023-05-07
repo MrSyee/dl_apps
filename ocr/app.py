@@ -19,9 +19,11 @@ class TrOCRInferencer:
 
     def inference(self, image: Image) -> str:
         """Inference using model."""
+        # preprocess
         pixel_values = self.processor(images=image, return_tensors="pt").pixel_values
-
+        # inference
         generated_ids = self.model.generate(pixel_values)
+        # postprocess
         generated_text = self.processor.batch_decode(
             generated_ids, skip_special_tokens=True
         )[0]
@@ -33,6 +35,7 @@ inferencer = TrOCRInferencer()
 
 
 def image_to_text(image: np.ndarray) -> str:
+    print("origin", image.shape, image.dtype)
     image = Image.fromarray(image).convert("RGB")
     # NOTE: Can't save in colab
     # image.save("inputs/canvas.png", format="PNG")
@@ -41,7 +44,7 @@ def image_to_text(image: np.ndarray) -> str:
 
 
 # Set gradio app
-with gr.Blocks() as app:
+with gr.Blocks() as demo:
     gr.Markdown("# Handwritten Image OCR")
     with gr.Tab("Image upload"):
         image = gr.Image(label="Handwritten image file")
@@ -54,6 +57,8 @@ with gr.Blocks() as app:
         gr.Markdown("## Image Examples")
         gr.Examples(
             examples=[
+                os.path.join(os.path.dirname(__file__), "examples/Hello.png"),
+                os.path.join(os.path.dirname(__file__), "examples/Hello_cursive.png"),
                 os.path.join(os.path.dirname(__file__), "examples/Red.png"),
                 os.path.join(os.path.dirname(__file__), "examples/sentence.png"),
                 os.path.join(os.path.dirname(__file__), "examples/i_love_you.png"),
@@ -81,4 +86,4 @@ with gr.Blocks() as app:
 
 
 if __name__ == "__main__":
-    app.launch()
+    demo.launch()

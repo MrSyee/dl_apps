@@ -18,7 +18,10 @@ class TrOCRInferencer:
         )
 
     def inference(self, image: Image) -> str:
-        """Inference using model."""
+        """Inference using model.
+
+        It is performed as a procedure of preprocessing - inference - postprocessing.
+        """
         # preprocess
         pixel_values = self.processor(images=image, return_tensors="pt").pixel_values
         # inference
@@ -35,9 +38,8 @@ inferencer = TrOCRInferencer()
 
 
 def image_to_text(image: np.ndarray) -> str:
-    print("origin", image.shape, image.dtype)
     image = Image.fromarray(image).convert("RGB")
-    # NOTE: Can't save in colab
+    # NOTE: If you want save input image, use thie line
     # image.save("inputs/canvas.png", format="PNG")
     text = inferencer.inference(image)
     return text
@@ -86,4 +88,4 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(inbrowser=True)

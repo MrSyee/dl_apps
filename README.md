@@ -1,3 +1,5 @@
 # Deep learning Applications
-## Prerequisite
-- pyenv
+
+## Contents
+- [Handwritten OCR](ocr/)
+- [Remove image backgrounds](segmentation/)

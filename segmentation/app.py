@@ -68,9 +68,6 @@ def extract_object(image: np.ndarray, point_h: int, point_w: int, point_label: i
 
     # Get mask
     mask = inferencer.inference(image, point_coords, point_label)
-    overlay_image, contours = draw_contour(image, mask)
-    # overlay_image_pil = Image.fromarray(overlay_image).convert("RGB")
-    # overlay_image_pil.save("inputs/contour.png", format="PNG")
 
     # Extract object
     mask = mask.astype(np.uint8) * 255

@@ -1,5 +1,6 @@
 import os
 import urllib
+from typing import Tuple
 
 import cv2
 import gradio as gr
@@ -40,9 +41,22 @@ class SAMInferencer:
         points_labels: np.ndarray,
     ) -> np.ndarray:
         self.predictor.set_image(image)
-        masks, _, _ = self.predictor.predict(point_coords, points_labels)
-        merged_mask = np.logical_or.reduce(masks, axis=0)
-        return merged_mask
+        masks, scores, _ = self.predictor.predict(point_coords, points_labels)
+        # merged_mask = np.logical_or.reduce(masks, axis=0)
+        mask, score = self.select_masks(masks, scores, point_coords.shape[0])
+        return mask
+
+    def select_masks(
+        self, masks: np.ndarray, iou_preds: np.ndarray, num_points: int
+    ) -> Tuple [np.ndarray, np.ndarray]:
+        # Determine if we should return the multiclick mask or not from the number of points.
+        # The reweighting is used to avoid control flow.
+        score_reweight = np.array([1000] + [0] * 2)
+        score = iou_preds + (num_points - 2.5) * score_reweight
+        best_idx = np.argmax(score)
+        masks = np.expand_dims(masks[best_idx, :, :], axis=-1)
+        iou_preds = np.expand_dims(iou_preds[best_idx], axis=0)
+        return masks, iou_preds
 
 
 inferencer = SAMInferencer(
@@ -61,8 +75,8 @@ def draw_contour(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
 
 
 def extract_object(image: np.ndarray, point_h: int, point_w: int, point_label: int):
-    point_coords = np.array([[point_h, point_w]])
-    point_label = np.array([point_label])
+    point_coords = np.array([[point_h, point_w], [0, 0]])
+    point_label = np.array([point_label, -1])
     # image_pil = Image.fromarray(image).convert("RGB")
     # image_pil.save("inputs/origin.png", format="PNG")
 

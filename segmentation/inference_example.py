@@ -82,7 +82,7 @@ def main():
 
     # Save results
     print("[INFO] Save results")
-    os.makedirs(CHECKPOINT_PATH, exist_ok=True)
+    os.makedirs("outputs", exist_ok=True)
     image = PIL.Image.fromarray(image)
     image.save(OUTPUT_PATH)
 

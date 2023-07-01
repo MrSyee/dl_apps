@@ -74,9 +74,9 @@ def draw_contour(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return contour_image, contours
 
 
-def extract_object(image: np.ndarray, point_h: int, point_w: int, point_label: int):
+def extract_object(image: np.ndarray, point_h: int, point_w: int):
     point_coords = np.array([[point_h, point_w], [0, 0]])
-    point_label = np.array([point_label, -1])
+    point_label = np.array([1, -1])
     # image_pil = Image.fromarray(image).convert("RGB")
     # image_pil.save("inputs/origin.png", format="PNG")
 
@@ -93,7 +93,7 @@ def extract_object(image: np.ndarray, point_h: int, point_w: int, point_label: i
 def extract_object_by_event(image: np.ndarray, evt: gr.SelectData):
     click_h, click_w = evt.index
 
-    return extract_object(image, click_h, click_w, 1)
+    return extract_object(image, click_h, click_w)
 
 
 def get_coords(evt: gr.SelectData):
@@ -106,7 +106,6 @@ with gr.Blocks() as demo:
     with gr.Row():
         coord_h = gr.Number(label="Mouse coords h")
         coord_w = gr.Number(label="Mouse coords w")
-        click_label = gr.Number(label="label")
 
     with gr.Row():
         input_img = gr.Image(label="Input image").style(height=600)
@@ -120,7 +119,7 @@ with gr.Blocks() as demo:
         examples=[
             [os.path.join(os.path.dirname(__file__), "examples/dog.jpg"), 1013, 786, 1]
         ],
-        inputs=[input_img, coord_h, coord_w, click_label],
+        inputs=[input_img, coord_h, coord_w],
         outputs=output_img,
         fn=extract_object,
         run_on_click=True,

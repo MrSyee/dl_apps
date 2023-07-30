@@ -8,8 +8,6 @@ from bs4 import BeautifulSoup
 load_dotenv()
 
 
-# cnn 기사 크롤링 함수
-# max 토큰 지정
 def crawl(url: str):
     rep = requests.get(url)
 
@@ -24,13 +22,14 @@ def crawl(url: str):
 
     return article
 
+# max 토큰 지정
+# 날짜를 지정 -> 그 날의 헤드라인 5개 기사 뽑기 -> 요약 -> 번역
 class GPTInferencer:
     def __init__(self):
         openai.api_key = os.getenv("OPENAI_API_KEY")
         self.model = "gpt-3.5-turbo"
 
     def summarize(self, texts: str):
-        print(f"input of chatgpt: {texts}")
         query = f"""
             Summarize the sentences below.
             ---
@@ -70,18 +69,17 @@ with gr.Blocks() as app:
     crawl_btn = gr.Button("Crawl!")
 
     gr.Markdown("## 원문 기사")
-    original_box = gr.Textbox(label="Original text", lines=7)
+    original_box = gr.Textbox(label="Original article", lines=7)
     crawl_btn.click(crawl, inputs=[url], outputs=[original_box])
     summarize_btn = gr.Button("Summarize!")
 
     gr.Markdown("## 원문 기사 요약")
-    abstract_box = gr.Textbox(label="Summarize", lines=7)
+    abstract_box = gr.Textbox(label="Summarized article", lines=7)
     summarize_btn.click(gpt_inferencer.summarize, inputs=[original_box], outputs=[abstract_box])
-
 
     gr.Markdown("## 요약문 한국어 번역")
     translate_btn = gr.Button("Translate!")
-    translate_box = gr.Textbox(label="Translate", lines=7)
+    translate_box = gr.Textbox(label="Translated article", lines=7)
     translate_btn.click(gpt_inferencer.translate, inputs=[abstract_box], outputs=[translate_box])
 
 app.launch(inline=False, share=True)

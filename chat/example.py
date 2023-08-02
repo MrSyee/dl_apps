@@ -1,7 +1,13 @@
+import os
+
 import openai
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 # 발급받은 API 키 설정
-OPENAI_API_KEY = "<OPENAI_API_KEY>"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # openai API 키 인증
 openai.api_key = OPENAI_API_KEY

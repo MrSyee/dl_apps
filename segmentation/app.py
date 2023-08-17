@@ -48,7 +48,7 @@ class SAMInferencer:
 
     def select_masks(
         self, masks: np.ndarray, iou_preds: np.ndarray, num_points: int
-    ) -> Tuple [np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
         # Determine if we should return the multiclick mask or not from the number of points.
         # The reweighting is used to avoid control flow.
         score_reweight = np.array([1000] + [0] * 2)

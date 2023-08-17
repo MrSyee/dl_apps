@@ -1,6 +1,7 @@
 # Segmentation: Click-based Object Extraction
-[[Colab]()] | [[Demo Video]()]
+[[Colab](https://colab.research.google.com/github/MrSyee/dl_apps/blob/main/segmentation/remove_background_app.ipynb#scrollTo=sYRMevglbDCr)] | [[Demo Video](https://youtu.be/JBbBKX-Nqjw)]
 
+![remove_background](https://github.com/MrSyee/dl_apps/assets/17582508/be4383cf-7828-4f92-99bb-554bdaf93b98)
 
 ## Prerequisite
 - python: 3.9+

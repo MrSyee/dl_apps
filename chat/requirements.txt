@@ -3,4 +3,4 @@ beautifulsoup4            == 4.12.2
 python-dotenv             == 1.0.0
 
 # app
-gradio                    == 3.35.0
+gradio                    == 3.40.0

@@ -6,4 +6,4 @@ opencv-python             == 4.7.0.72
 pycocotools               == 2.0.6
 
 # app
-gradio                    == 3.35.0
+gradio                    == 3.40.0

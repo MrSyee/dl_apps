@@ -19,5 +19,7 @@ python app.py
 ```
 Running on https://localhost:7860/.
 
+## Run on Jupyter Notebook
+
 ## Reference
 -

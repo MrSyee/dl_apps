@@ -1,5 +1,14 @@
+"""Retriving News Chatbot with GPT & News API
+
+- What is the latest issues?
+- What are the popular issues for September 2023?
+- What is Tesla up these days?
+
+- [ ]: Argument 표시
+- [ ]: 스크래핑 붙이기
+"""
+
 import os
-import time
 import requests
 import json
 
@@ -16,25 +25,30 @@ news_api_key = os.environ["NEWS_API_KEY"]
 
 max_num_articles = 5
 
-def get_top_headlines(query: str = None, country: str = None, category: str = None):
-    """Retrieve top headlines from newsapi.org (API key required)"""
+def get_articles(query: str = None, from_date: str = None, to_date: str = None, sort_by: str = None):
+    """Retrieve articles from newsapi.org (API key required)"""
 
-    base_url = "https://newsapi.org/v2/top-headlines"
+    base_url = "https://newsapi.org/v2/everything"
     headers = {
         "x-api-key": news_api_key
     }
     params = {
-        # "sources": "cnn",
+        "sortBy": "publishedAt",
+        "sources": "cnn",
+        "language": "en",
     }
     print("query", query)
-    print("country", country)
-    print("category", category)
+    print("from_date", from_date)
+    print("to_date", to_date)
+    print("sort_by", sort_by)
     if query is not None:
         params['q'] = query
-    if country is not None:
-        params['country'] = country
-    if category is not None:
-        params['category'] = category
+    if from_date is not None:
+        params['from'] = from_date
+    if to_date is not None:
+        params['to'] = to_date
+    if sort_by is not None:
+        params['sortBy'] = sort_by
 
     # Fetch from newsapi.org
     # reference: https://newsapi.org/docs/endpoints/top-headlines
@@ -44,7 +58,7 @@ def get_top_headlines(query: str = None, country: str = None, category: str = No
     if data['status'] == 'ok':
         print(
             f"Processing {data['totalResults']} articles from newsapi.org. "
-            + f"But, max number is {max_num_articles}"
+            + f"But, max number is {max_num_articles}."
         )
         return json.dumps(data['articles'][:min(max_num_articles, len(data['articles']))])
     else:
@@ -52,57 +66,36 @@ def get_top_headlines(query: str = None, country: str = None, category: str = No
         return 'No articles found'
 
 
-def get_current_weather(location, unit="fahrenheit"):
-    """Get the current weather in a given location"""
-    weather_info = {
-        "location": location,
-        "temperature": "72",
-        "unit": unit,
-        "forecast": ["sunny", "windy"],
+functions = [
+    {
+        "name": "get_articles",
+        "description": "Get top news headlines by country and/or category",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Freeform keywords or a phrase to search for.",
+                },
+                "from_date": {
+                    "type": "string",
+                    "description": "A date and optional time for the oldest article allowed. This should be in ISO 8601 format",
+                },
+                "to_date": {
+                    "type": "string",
+                    "description": "A date and optional time for the newest article allowed. This should be in ISO 8601 format",
+                },
+                "sort_by": {
+                    "type": "string",
+                    "description": "The order to sort the articles in",
+                    "enum": ["relevancy","popularity","publishedAt"]
+                }
+            },
+            "required": [],
+        }
     }
-    return json.dumps(weather_info)
+]
 
-
-
-signature_get_top_headlines = {
-    "name": "get_top_headlines",
-    "description": "Get top news headlines by country and/or category",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "query": {
-                "type": "string",
-                "description": "Freeform keywords or a phrase to search for.",
-            },
-            "country": {
-                "type": "string",
-                "description": "The 2-letter ISO 3166-1 code of the country you want to get headlines for",
-            },
-            "category": {
-                "type": "string",
-                "description": "The category you want to get headlines for",
-                "enum": ["business","entertainment","general","health","science","sports","technology"]
-            }
-        },
-        "required": [],
-    }
-}
-
-signature_get_current_weather = {
-    "name": "get_current_weather",
-    "description": "Get the current weather in a given location",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "The city and state, e.g. San Francisco, CA",
-            },
-            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-        },
-        "required": ["location"],
-    },
-}
 
 def respond(message: str, chat_history: list, function_call: str = "auto"):
     # 메시지 설정하기
@@ -114,21 +107,13 @@ def respond(message: str, chat_history: list, function_call: str = "auto"):
     res = openai.ChatCompletion.create(
         model=model,
         messages=input_msg,
-        functions=[signature_get_top_headlines, signature_get_current_weather],
+        functions=functions,
         function_call=function_call
     )
     response = res["choices"][0]["message"]
     print("First response", response)
 
     # Function call message
-    llm_system_prompt = """
-        You are an assistant that provides news and headlines to user requests.
-        Always try to get the lastest breaking stories using the available function calls.
-        Please output something like this:
-        Number. [Title](Article Link)\n
-            - Description: description\n
-            - Publish Date: publish date\n
-    """
     input_msg = [
         {"role": "user", "content": message},
     ]
@@ -137,31 +122,26 @@ def respond(message: str, chat_history: list, function_call: str = "auto"):
     # call functions requested by the model
     if response.get("function_call"):
         function_name = response["function_call"]["name"]
-        if function_name == "get_top_headlines":
+        if function_name == "get_articles":
+            llm_system_prompt = """
+                You are an assistant that provides news and headlines to user requests.
+                Always try to get the lastest breaking stories using the available function calls.
+                Please output something like this:
+                Number. [Title](Article Link)\n
+                    - Description: description\n
+                    - Publish Date: publish date\n
+            """
             input_msg.append({"role": "system", "content": llm_system_prompt})
 
             args = json.loads(response["function_call"]["arguments"])
-            headlines = get_top_headlines(
+            headlines = get_articles(
                 query=args.get("query"),
-                country=args.get("country"),
-                category=args.get("category")
+                from_date=args.get("from_date"),
+                to_date=args.get("to_date"),
+                sort_by=args.get("sort_by"),
             )
-            print("headlines", len(headlines), headlines)
+            print("headlines", headlines)
             input_msg.append({ "role": "function", "name": function_name, "content": headlines})
-
-        elif function_name == "get_current_weather":
-            function_args = json.loads(response["function_call"]["arguments"])
-            function_response = get_current_weather(
-                location=function_args.get("location"),
-                unit=function_args.get("unit"),
-            )
-            input_msg.append(
-                {
-                    "role": "function",
-                    "name": function_name,
-                    "content": function_response,
-                }
-            )
 
         print("input_msg", input_msg)
         res = openai.ChatCompletion.create(

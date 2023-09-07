@@ -22,6 +22,12 @@ messages = [
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": query},
 ]
+# messages = [
+#     {"role": "system", "content": "You are an assistant to help with addition. You take two numbers and output the result of their addition."},
+#     {"role": "user", "content": "3, 5"},
+#     {"role": "assistant", "content": "3 + 5 = 8 입니다."},
+#     {"role": "user", "content": "10과 13"},
+# ]
 
 # ChatGPT API 호출하기
 response = openai.ChatCompletion.create(model=model, messages=messages)

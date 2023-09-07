@@ -76,7 +76,9 @@ class GPTClient:
         Otherwise get simple GPT response.
         """
         response = openai.ChatCompletion.create(
-            model=self.model, messages=messages, functions=functions, function_call="auto"
+            model=self.model,
+            messages=messages,
+            functions=functions,
         )
         return response["choices"][0]["message"]
 
@@ -109,13 +111,18 @@ class GPTClient:
         )
         return res["choices"][0]["message"]["content"].strip()
 
+
 class NewsApiClient:
     def __init__(self):
         self.news_api_key = os.environ["NEWS_API_KEY"]
         self.max_num_articles = 5
 
     def get_articles(
-        self, query: str = None, from_date: str = None, to_date: str = None, sort_by: str = None
+        self,
+        query: str = None,
+        from_date: str = None,
+        to_date: str = None,
+        sort_by: str = None,
     ) -> str:
         """Retrieve articles from newsapi.org (API key required)"""
         base_url = "https://newsapi.org/v2/everything"
@@ -157,7 +164,7 @@ news_api_client = NewsApiClient()
 gpt_client = GPTClient()
 
 
-def scrap_article(title: str) -> Tuple[str, str]:
+def scrap_cnn_article(title: str) -> Tuple[str, str]:
     url = TITLE_TO_URL[title]
     rep = requests.get(url)
 
@@ -177,7 +184,7 @@ def scrap_article(title: str) -> Tuple[str, str]:
     return summarized_article, translated_article
 
 
-func_get_articles = {
+signature_get_articles = {
     "name": "get_articles",
     "description": "Get news articles",
     "parameters": {
@@ -205,7 +212,7 @@ func_get_articles = {
     },
 }
 
-func_get_title_and_url = {
+signature_get_title_and_url = {
     "name": "get_title_and_url",
     "description": "Get title of article and url.",
     "parameters": {
@@ -227,12 +234,12 @@ func_get_title_and_url = {
 }
 
 
-def respond(prompt: str, chat_history: list):
+def respond(prompt: str, chat_history: List[str]) -> Tuple[str, List[str]]:
     global TITLE_TO_URL
 
     # Get args from prompt
     messages = [{"role": "user", "content": prompt}]
-    args_resp = gpt_client.get_args_for_function_call(messages, [func_get_articles])
+    args_resp = gpt_client.get_args_for_function_call(messages, [signature_get_articles])
 
     # call functions requested by the model
     answer = args_resp["content"]
@@ -258,7 +265,7 @@ def respond(prompt: str, chat_history: list):
         # Get titles and urls for dropdown from response message
         messages = [{"role": "user", "content": answer}]
         args_resp = gpt_client.get_args_for_function_call(
-            messages, [func_get_title_and_url]
+            messages, [signature_get_title_and_url]
         )
         args = json.loads(args_resp["function_call"]["arguments"])
         title_list, url_list = args.get("title"), args.get("url")
@@ -303,9 +310,10 @@ with gr.Blocks() as demo:
                 label="Translated article", lines=10, interactive=False
             )
             crawl_btn = gr.Button("Get article!")
+
     prompt.submit(respond, [prompt, chatbot], [prompt, chatbot, article_list])
     crawl_btn.click(
-        scrap_article, inputs=[article_list], outputs=[abstract_box, translate_box]
+        scrap_cnn_article, inputs=[article_list], outputs=[abstract_box, translate_box]
     )
 
 

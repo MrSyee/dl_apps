@@ -3,7 +3,6 @@ import os
 import openai
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 # 발급받은 API 키 설정

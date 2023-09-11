@@ -302,10 +302,10 @@ with gr.Blocks() as demo:
             translate_box = gr.Textbox(
                 label="Translated article", lines=10, interactive=False
             )
-            crawl_btn = gr.Button("Get article!")
+            scrap_btn = gr.Button("Get article!")
 
     prompt.submit(respond, [prompt, chatbot], [prompt, chatbot, article_list])
-    crawl_btn.click(
+    scrap_btn.click(
         scrap_cnn_article, inputs=[article_list], outputs=[abstract_box, translate_box]
     )
 

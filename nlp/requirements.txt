@@ -1,6 +1,5 @@
 openai                    == 0.27.8
 beautifulsoup4            == 4.12.2
-python-dotenv             == 1.0.0
 
 # app
 gradio                    == 3.40.0

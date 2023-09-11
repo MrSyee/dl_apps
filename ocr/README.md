@@ -14,13 +14,6 @@ And install requirments.
 make setup
 ```
 
-## Run
-Run app using gradio.
-```
-python app.py
-```
-Running on https://localhost:7860/.
-
 ## Run on Jupyter Notebook
 See this [Notebook](handwritten_ocr_app.ipynb) or [Colab](https://colab.research.google.com/github/MrSyee/dl_apps/blob/main/ocr/handwritten_ocr.ipynb)
 

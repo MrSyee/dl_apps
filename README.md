@@ -7,4 +7,5 @@
 ### Segmentation: [Remove background](segmentation/)
 ![remove_background](https://github.com/MrSyee/dl_apps/assets/17582508/be4383cf-7828-4f92-99bb-554bdaf93b98)
 
-### NLP:
+### NLP: [News Article Search Chatbot](nlp/)
+![news_article_chatbot](https://github.com/MrSyee/dl_apps/assets/17582508/45b97670-ae27-49c7-9c83-9aa035ceed88)

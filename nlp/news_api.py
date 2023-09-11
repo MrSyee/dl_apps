@@ -43,8 +43,6 @@ class GPTClient:
 
         input_tokens = response["usage"]["prompt_tokens"]
         output_tokens = response["usage"]["completion_tokens"]
-        print(f"Input costs({input_tokens} tokens): ${input_tokens // 1000 * 0.0015}")
-        print(f"Output costs({output_tokens} tokens): ${output_tokens // 1000 * 0.002}")
         return response["choices"][0]["message"]["content"]
 
     def translate(self, texts: str) -> str:
@@ -63,9 +61,6 @@ class GPTClient:
 
         input_tokens = response["usage"]["prompt_tokens"]
         output_tokens = response["usage"]["completion_tokens"]
-        print(f"Input costs({input_tokens} tokens): ${input_tokens // 1000 * 0.0015}")
-        print(f"Output costs({output_tokens} tokens): ${output_tokens // 1000 * 0.002}")
-
         return response["choices"][0]["message"]["content"]
 
     def get_args_for_function_call(
@@ -82,7 +77,7 @@ class GPTClient:
         )
         return response["choices"][0]["message"]
 
-    def response_with_function_call(
+    def request_with_function_call(
         self,
         messages: List[Dict[str, str]],
         function: Callable,
@@ -170,8 +165,6 @@ def scrap_cnn_article(title: str) -> Tuple[str, str]:
 
     soup = BeautifulSoup(rep.content, "html.parser")
 
-    # Get title
-    article = soup.find("h1").get_text()
     # Get main contents
     article = ""
     for paragraph in soup.find_all(["p", "h2"], {"class": ["paragraph", "subheader"]}):
@@ -255,7 +248,7 @@ def respond(prompt: str, chat_history: List[str]) -> Tuple[str, List[str]]:
                 - Description: description\n
                 - Publish Date: publish date\n
         """
-        answer = gpt_client.response_with_function_call(
+        answer = gpt_client.request_with_function_call(
             messages=messages,
             function=news_api_client.get_articles,
             function_call_resp=args_resp,

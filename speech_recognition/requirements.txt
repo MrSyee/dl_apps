@@ -1,4 +1,5 @@
 openai                    == 0.27.8
+openai-whisper            == 20230918
 
 # app
 gradio                    == 3.40.0

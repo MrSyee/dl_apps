@@ -12,8 +12,8 @@ audio_file_name = "audio_from_youtube.webm"
 youtube_audio_path = Path(output_path / audio_file_name)
 
 # youtube_link = "https://youtu.be/dTn_EINLuwo?si=_iFFWPznSjkCxmxP"
-# youtube_link = "https://youtu.be/Q0NRYP6iufM?si=feh8Mq4uGsNTASpN"
-youtube_link = "https://youtu.be/d14cQHBtZc4?si=zCLsCFXgU5uUezHu"
+youtube_link = "https://youtu.be/QfmYJW4Y0C4?si=peZ05Qka7gr2QTJL"  # chimchak
+# youtube_link = "https://youtu.be/d14cQHBtZc4?si=zCLsCFXgU5uUezHu"
 yt = YouTube(youtube_link)
 
 print(yt.title)
@@ -38,3 +38,7 @@ print(audio_list)
 # with open(youtube_audio_path, "rb") as audio_file:
 #     transcript = openai.Audio.transcribe("whisper-1", audio_file)
 #     print(transcript["text"])
+
+# text = transcript["text"]
+# with open("outputs/result.txt", "w") as f:
+#     f.write(text)

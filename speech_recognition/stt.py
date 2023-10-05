@@ -1,11 +1,10 @@
 import os
-
-from pytube import YouTube
-
 from pathlib import Path
-import openai
+
 import gradio as gr
+import openai
 from dotenv import load_dotenv
+from pytube import YouTube
 
 load_dotenv()
 
@@ -36,6 +35,7 @@ def transcribe(link: str):
             audio_streams[-1].download(output_path="outputs", filename=audio_file_name)
 
     return speech_to_text(youtube_audio_path)
+
 
 # Set gradio app
 with gr.Blocks() as demo:

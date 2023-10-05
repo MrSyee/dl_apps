@@ -12,6 +12,6 @@ output = replicate.run(
     input={
         "audio_path": open(audio_path, "rb"),
         "language": "ko",
-    }
+    },
 )
 print(output)

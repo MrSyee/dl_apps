@@ -1,9 +1,9 @@
-from pytube import YouTube
 import os
-
 from pathlib import Path
+
 import openai
 from dotenv import load_dotenv
+from pytube import YouTube
 
 load_dotenv()
 
@@ -32,7 +32,7 @@ for a in audio_streams:
 # Whisper API
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-audio_list = sorted(list(output_path.glob('*.mp4')))
+audio_list = sorted(list(output_path.glob("*.mp4")))
 print(audio_list)
 
 # with open(youtube_audio_path, "rb") as audio_file:

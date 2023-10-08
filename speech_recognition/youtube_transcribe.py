@@ -13,6 +13,7 @@ writer_args = {
     "max_line_width": None,
 }
 model = whisper.load_model("large")
+print("[INFO] Initialize model.")
 
 
 def speech_to_text(audio_file_path: str) -> str:
@@ -50,11 +51,13 @@ with gr.Blocks() as demo:
     gr.Markdown("# Speech to Text")
 
     with gr.Row():
-        link = gr.Textbox(label="Youtube Link")
-        subtile = gr.File(label="Subtitle", file_types=[".srt"])
+        with gr.Column(scale=1):
+            link = gr.Textbox(label="Youtube Link")
+            subtile = gr.File(label="Subtitle", file_types=[".srt"])
+            submit_btn = gr.Button("Transcibe!")
 
-    output_video = gr.Video(label="Output", height=600)
-    submit_btn = gr.Button("Submit")
+        with gr.Column(scale=4):
+            output_video = gr.Video(label="Output", height=500)
 
     submit_btn.click(transcribe, [link], [subtile, output_video])
 

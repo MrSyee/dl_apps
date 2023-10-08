@@ -16,10 +16,8 @@ model = whisper.load_model("large")
 print("[INFO] Initialize model.")
 
 
-def speech_to_text(audio_file_path: str) -> str:
-    print(audio_file_path)
-    filename = os.path.basename(audio_file_path).split(".")[0]
-    transcript = model.transcribe(audio_file_path, verbose=True)
+def speech_to_text(audio_file_path: str, filename: str) -> str:
+    transcript = model.transcribe(audio_file_path)
     whisper_writer(transcript, audio_file_path, writer_args)
 
     return os.path.join(output_dir, f"{filename}.srt")
@@ -42,7 +40,8 @@ def transcribe(link: str):
     for audio_stream in audio_streams:
         if audio_stream.mime_type == "audio/webm" and audio_stream.abr == "160kbps":
             audio_streams[-1].download(output_path=output_dir, filename=audio_file_name)
-    transcript_file = speech_to_text(youtube_audio_path)
+
+    transcript_file = speech_to_text(youtube_audio_path, yt.title)
     return transcript_file, [os.path.join(output_dir, video_file_name), transcript_file]
 
 
@@ -54,7 +53,7 @@ with gr.Blocks() as demo:
         with gr.Column(scale=1):
             link = gr.Textbox(label="Youtube Link")
             subtile = gr.File(label="Subtitle", file_types=[".srt"])
-            submit_btn = gr.Button("Transcibe!")
+            submit_btn = gr.Button(value="Transcibe!")
 
         with gr.Column(scale=4):
             output_video = gr.Video(label="Output", height=500)

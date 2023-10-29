@@ -1,6 +1,5 @@
 import os
 
-import torch
 import whisper
 from pytube import YouTube
 from whisper.utils import get_writer

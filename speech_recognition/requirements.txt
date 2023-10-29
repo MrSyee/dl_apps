@@ -1,5 +1,6 @@
 openai                    == 0.27.8
 openai-whisper            == 20230918
+pytube                    == 15.0.0
 
 # app
 gradio                    == 3.40.0

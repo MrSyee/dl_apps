@@ -29,7 +29,7 @@ def transcribe(link: str):
     youtube_audio_path = os.path.join(output_dir, audio_file_name)
 
     yt = YouTube(link)
-    video_stream = (
+    _ = (
         yt.streams.filter(progressive=True, file_extension="mp4")
         .order_by("resolution")
         .desc()

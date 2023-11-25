@@ -1,7 +1,7 @@
 # Speech Recognition: Youtube Transcription
 [[Colab](https://colab.research.google.com/github/MrSyee/dl_apps/blob/main/speech_recognition/youtube_subtitle_generator_app.ipynb)] | [[Demo Video](https://youtu.be/yVgh3HY8SGM)]
 
-![youtube_subtitle_generator](https://github.com/MrSyee/dl_apps/assets/17582508/88229e16-ba7e-4f31-b82c-a452f094395f)
+![youtube_subtitle_generator](https://github.com/MrSyee/dl_apps/assets/17582508/4e628115-e7eb-496a-96c7-4d54c0562084)
 
 ## Prerequisite
 - python: 3.10+

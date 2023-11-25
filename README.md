@@ -2,7 +2,7 @@
 
 ## Contents
 ### OCR: [Handwritting Recognition](ocr/)
-![handwritten](https://user-images.githubusercontent.com/17582508/232518948-d67882c6-1bf1-4110-a9b4-6d6fd699a270.gif)
+![handwritten_ocr](https://github.com/MrSyee/dl_apps/assets/17582508/24998a51-bc4c-4b1f-b20b-34722dbab708)
 
 ### Segmentation: [Remove background](segmentation/)
 ![remove_background_sam](https://github.com/MrSyee/dl_apps/assets/17582508/b6447983-7797-4b9d-bc8c-e219600435cb)

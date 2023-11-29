@@ -18,4 +18,5 @@ make setup
 See this [Notebook]() or [Colab]()
 
 ## Reference
-- 
+- https://huggingface.co/docs/diffusers/using-diffusers/controlnet
+- https://github.com/lllyasviel/ControlNet

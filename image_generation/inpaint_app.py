@@ -4,16 +4,23 @@ import cv2
 import gradio as gr
 import numpy as np
 import torch
-from diffusers import AutoPipelineForInpainting
+from diffusers import AutoPipelineForInpainting, UniPCMultistepScheduler
 from PIL import Image
 
 pipeline = AutoPipelineForInpainting.from_pretrained(
-    "stabilityai/stable-diffusion-2-inpainting", torch_dtype=torch.float16
+    "diffusers/stable-diffusion-xl-1.0-inpainting-0.1", torch_dtype=torch.float16
 )
 pipeline.enable_model_cpu_offload()
 
+pipeline.scheduler = UniPCMultistepScheduler.from_config(pipeline.scheduler.config)
+
+seed = 7777
+generator = [
+    torch.Generator(device="cuda").manual_seed(seed + i) for i in range(4)
+]
+
 def resize_and_pad(
-    image: np.ndarray, mask: np.ndarray, target_size: int = 512
+    image: np.ndarray, mask: np.ndarray, target_size: int = 1024
 ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int], Tuple[int, int]]:
     """
     이미지와 마스크를 리사이즈합니다.
@@ -62,11 +69,11 @@ def restore(
 
 
 def inpaint_from_mask(image_dict: Image, prompt: str):
-    Image.fromarray(image_dict["image"]).save("outputs/image.png")
-    Image.fromarray(image_dict["mask"]).save("outputs/image.png")
-
     image = image_dict["image"]
-    mask = image_dict["mask"][0]
+    mask = image_dict["mask"]
+
+    mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
+    _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
     resized_image, resized_mask, origin_shape, new_shape = resize_and_pad(image, mask)
 
@@ -74,7 +81,9 @@ def inpaint_from_mask(image_dict: Image, prompt: str):
         prompt=prompt,
         image=Image.fromarray(resized_image),
         mask_image=Image.fromarray(resized_mask),
+        num_inference_steps=20,
         num_images_per_prompt=4,
+        generator=generator,
     ).images
 
     output_images = []
@@ -89,6 +98,7 @@ def inpaint_from_mask(image_dict: Image, prompt: str):
         output_images.append(Image.fromarray(output_image.astype(np.uint8)))
 
     output_images[0].save("./outputs/output.png")
+    print("Complete")
     return output_images
 
 

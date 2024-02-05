@@ -7,13 +7,13 @@ from diffusers import AutoPipelineForInpainting
 from PIL import Image
 
 pipeline = AutoPipelineForInpainting.from_pretrained(
-    "stabilityai/stable-diffusion-2-inpainting", torch_dtype=torch.float16
+    "diffusers/stable-diffusion-xl-1.0-inpainting-0.1", torch_dtype=torch.float16
 )
 pipeline.enable_model_cpu_offload()
 
 
 def resize_and_pad(
-    image: np.ndarray, mask: np.ndarray, target_size: int = 512
+    image: np.ndarray, mask: np.ndarray, target_size: int = 1024
 ) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int], Tuple[int, int]]:
     """
     이미지와 마스크를 리사이즈합니다.
@@ -65,29 +65,12 @@ def inpaint_from_mask(image_dict: Image, prompt: str):
     image = image_dict["image"]
     mask = image_dict["mask"]
 
-    mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
-    _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-    print(mask.shape, np.unique(mask))
-
-    resized_image, resized_mask, origin_shape, new_shape = resize_and_pad(image, mask)
-
-    generated_images = pipeline(
+    output_images = pipeline(
         prompt=prompt,
-        image=Image.fromarray(resized_image),
-        mask_image=Image.fromarray(resized_mask),
+        image=Image.fromarray(image),
+        mask_image=Image.fromarray(mask),
         num_images_per_prompt=4,
     ).images
-
-    output_images = []
-    for generated_image in generated_images:
-        generated_image = np.asarray(generated_image)
-        resized_mask = np.asarray(resized_mask)
-
-        restored_image, restored_mask = restore(generated_image, resized_mask, origin_shape, new_shape)
-
-        restored_mask = np.expand_dims(restored_mask, -1) / 255
-        output_image = restored_image * restored_mask + image * (1 - restored_mask)
-        output_images.append(Image.fromarray(output_image.astype(np.uint8)))
 
     output_images[0].save("./outputs/output.png")
     return output_images

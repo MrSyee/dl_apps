@@ -108,7 +108,7 @@ with gr.Blocks() as app:
         prompt = gr.Textbox(
             label="Prompt",
             lines=3,
-            value="a black cat with glowing eyes on the bench, cute, highly detailed, 8k",
+            value="a black cat with glowing eyes on the bench, big cat, cute, highly detailed, 8k",
         )
     with gr.Row():
         with gr.Tab("Mask"):

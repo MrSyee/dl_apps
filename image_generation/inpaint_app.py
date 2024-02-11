@@ -15,26 +15,22 @@ from segment_anything import SamPredictor, sam_model_registry
 # Initialize
 #############
 # Pipeline
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 pipeline = AutoPipelineForInpainting.from_pretrained(
     "diffusers/stable-diffusion-xl-1.0-inpainting-0.1", torch_dtype=torch.float16
-)
-pipeline.enable_model_cpu_offload()
-
+).to(DEVICE)
 pipeline.scheduler = UniPCMultistepScheduler.from_config(pipeline.scheduler.config)
+pipeline.enable_vae_tiling()
 
 seed = 7777
-generator = [
-    torch.Generator(device="cuda").manual_seed(seed + i) for i in range(4)
-]
+generator = [torch.Generator(device="cuda").manual_seed(seed)]
 
 # SAM
 CHECKPOINT_PATH = "checkpoint"
 CHECKPOINT_NAME = "sam_vit_h_4b8939.pth"
 CHECKPOINT_URL = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
 MODEL_TYPE = "default"
-IMAGE_PATH = "examples/mannequin.jpg"
-OUTPUT_PATH = "outputs/output.jpg"
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class SAMInferencer:
     def __init__(
@@ -93,9 +89,7 @@ def extract_object(image: np.ndarray, point_x: int, point_y: int):
     # Postprocess mask
     mask = (mask > 0).astype(np.uint8) * 255
 
-    print("mask", mask.shape, mask.dtype, np.unique(mask))
     mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
-    print("after mask", mask.shape, mask.dtype, np.unique(mask))
 
     return mask
 
@@ -169,7 +163,7 @@ def inpaint_from_mask(image_dict: dict, prompt: str):
         image=Image.fromarray(resized_image),
         mask_image=Image.fromarray(resized_mask),
         num_inference_steps=20,
-        num_images_per_prompt=4,
+        num_images_per_prompt=1,
         generator=generator,
     ).images
 
@@ -184,9 +178,8 @@ def inpaint_from_mask(image_dict: dict, prompt: str):
         output_image = restored_image * restored_mask + image * (1 - restored_mask)
         output_images.append(Image.fromarray(output_image.astype(np.uint8)))
 
-    output_images[0].save("./outputs/output.png")
     print("Complete")
-    return output_images
+    return output_images[0]
 
 
 def inpaint_with_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
@@ -200,7 +193,7 @@ def inpaint_with_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
         image=Image.fromarray(resized_image),
         mask_image=Image.fromarray(resized_mask),
         num_inference_steps=20,
-        num_images_per_prompt=4,
+        num_images_per_prompt=1,
         generator=generator,
     ).images
 
@@ -215,9 +208,8 @@ def inpaint_with_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
         output_image = restored_image * restored_mask + image * (1 - restored_mask)
         output_images.append(Image.fromarray(output_image.astype(np.uint8)))
 
-    output_images[0].save("./outputs/output.png")
     print("Complete")
-    return output_images
+    return output_images[0]
 
 
 with gr.Blocks() as app:
@@ -230,7 +222,7 @@ with gr.Blocks() as app:
         )
     with gr.Row():
         with gr.Tab("Mask"):
-            input_img = gr.Image(
+            mask_input_img = gr.Image(
                 label="Input image",
                 height=600,
                 tool="sketch",
@@ -241,7 +233,7 @@ with gr.Blocks() as app:
 
         with gr.Tab("Click"):
             with gr.Row():
-                input_img = gr.Image(
+                click_input_img = gr.Image(
                     label="Input image",
                     height=600,
                 )
@@ -253,11 +245,9 @@ with gr.Blocks() as app:
             click_inpaint_btn = gr.Button(value="Inpaint!")
 
     with gr.Row():
-        gallary = gr.Gallery(rows=1)
+        output_image = gr.Image(label="Output image", height=600)
 
-    inpaint_btn.click(inpaint_from_mask, [input_img, prompt], [gallary])
+    inpaint_btn.click(inpaint_from_mask, [mask_input_img, prompt], [output_image])
 
-    input_img.select(extract_object_by_event, [input_img], [mask_img])
-    click_inpaint_btn.click(inpaint_with_mask, [input_img, mask_img, prompt], [gallary])
-
-app.launch(inline=False, share=True)
+    click_input_img.select(extract_object_by_event, [click_input_img], [mask_img])
+    click_inpaint_btn.click(inpaint_with_mask, [click_input_img, mask_img, prompt], [output_image])

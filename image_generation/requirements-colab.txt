@@ -1,0 +1,6 @@
+diffusers==0.26.2
+accelerate==0.27.0
+git+https://github.com/facebookresearch/segment-anything.git
+
+# app
+gradio==3.40.0

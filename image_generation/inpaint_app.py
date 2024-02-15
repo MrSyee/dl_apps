@@ -1,6 +1,6 @@
-from typing import Tuple
 import os
 import urllib
+from typing import Tuple
 
 import cv2
 import gradio as gr
@@ -9,7 +9,6 @@ import torch
 from diffusers import AutoPipelineForInpainting, UniPCMultistepScheduler
 from PIL import Image
 from segment_anything import SamPredictor, sam_model_registry
-
 
 #############
 # Initialize
@@ -24,13 +23,18 @@ pipeline.scheduler = UniPCMultistepScheduler.from_config(pipeline.scheduler.conf
 pipeline.enable_vae_tiling()
 
 seed = 7777
-generator = [torch.Generator(device="cuda").manual_seed(seed)]
+num_images = 1
+generator = [
+    torch.Generator(device="cuda").manual_seed(seed + i) for i in range(num_images)
+]
+
 
 # SAM
 CHECKPOINT_PATH = "checkpoint"
 CHECKPOINT_NAME = "sam_vit_h_4b8939.pth"
 CHECKPOINT_URL = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
 MODEL_TYPE = "default"
+
 
 class SAMInferencer:
     def __init__(
@@ -41,7 +45,7 @@ class SAMInferencer:
         model_type: str,
         device: torch.device,
     ):
-        print("[INFO] Initailize inferencer")
+        print("[INFO] Initailize inferencer.")
         if not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path, exist_ok=True)
         checkpoint = os.path.join(checkpoint_path, checkpoint_name)
@@ -49,6 +53,7 @@ class SAMInferencer:
             urllib.request.urlretrieve(checkpoint_url, checkpoint)
         sam = sam_model_registry[model_type](checkpoint=checkpoint).to(device)
         self.predictor = SamPredictor(sam)
+        print("[INFO] Initialization complete!")
 
     def inference(
         self,
@@ -96,120 +101,47 @@ def extract_object(image: np.ndarray, point_x: int, point_y: int):
 
 def extract_object_by_event(image: np.ndarray, evt: gr.SelectData):
     click_x, click_y = evt.index
-
     return extract_object(image, click_x, click_y)
 
 
-def resize_and_pad(
-    image: np.ndarray, mask: np.ndarray, target_size: int = 1024
-) -> Tuple[np.ndarray, np.ndarray, Tuple[int, int], Tuple[int, int]]:
-    """
-    이미지와 마스크를 리사이즈합니다.
-    가로와 세로 중 긴 부분이 target_size가 되도록 리사이즈하고, 짧은 쪽도 target_size가 될 수 있도록 패딩합니다.
-    """
-    # Resize
-    height, width, _ = image.shape
-    max_dim = max(height, width)
-    scale = target_size / max_dim
-    new_height = int(height * scale)
-    new_width = int(width * scale)
-    image_resized = cv2.resize(image, (new_width, new_height))
-    mask_resized = cv2.resize(mask, (new_width, new_height))
-
-    # Pad
-    pad_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
-    pad_image[:new_height, :new_width, :] = image_resized
-
-    pad_mask = np.zeros((target_size, target_size), dtype=np.uint8)
-    pad_mask[:new_height, :new_width] = mask_resized
-
-    return pad_image, pad_mask, (height, width), (new_height, new_width)
-
-
-def restore(
-    pad_image: np.ndarray,
-    pad_mask: np.ndarray,
-    origin_shape: Tuple[int, int],
-    resize_shape: Tuple[int, int, int, int],
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    리사이즈된 이미지와 마스크를 원본 사이즈로 리사이즈.
-    """
-    # Unpadding
-    resize_height, resize_width = resize_shape
-
-    image = pad_image[:resize_height, :resize_width]
-    mask = pad_mask[:resize_height, :resize_width]
-
-    # Resize
-    origin_height, origin_width = origin_shape
-    image = cv2.resize(image, dsize=(origin_width, origin_height))
-    mask = cv2.resize(mask, dsize=(origin_width, origin_height))
-
-    return image, mask
-
-
-def inpaint_from_mask(image_dict: dict, prompt: str):
+def inpaint_drawing_mask(image_dict: Image, prompt: str):
     image = image_dict["image"]
     mask = image_dict["mask"]
 
-    mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
-    _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-
-    resized_image, resized_mask, origin_shape, new_shape = resize_and_pad(image, mask)
+    height, width = image.shape[:2]
+    print(height, width)
 
     generated_images = pipeline(
         prompt=prompt,
-        image=Image.fromarray(resized_image),
-        mask_image=Image.fromarray(resized_mask),
+        image=Image.fromarray(image),
+        mask_image=Image.fromarray(mask),
         num_inference_steps=20,
-        num_images_per_prompt=1,
+        num_images_per_prompt=num_images,
+        original_size=(height, width),
+        target_size=(height, width),
         generator=generator,
     ).images
-
-    output_images = []
-    for generated_image in generated_images:
-        generated_image = np.asarray(generated_image)
-        resized_mask = np.asarray(resized_mask)
-
-        restored_image, restored_mask = restore(generated_image, resized_mask, origin_shape, new_shape)
-
-        restored_mask = np.expand_dims(restored_mask, -1) / 255
-        output_image = restored_image * restored_mask + image * (1 - restored_mask)
-        output_images.append(Image.fromarray(output_image.astype(np.uint8)))
-
-    print("Complete")
-    return output_images[0]
+    return generated_images[0]
 
 
-def inpaint_with_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
+def inpaint_click_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
     mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
     _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
-    resized_image, resized_mask, origin_shape, new_shape = resize_and_pad(image, mask)
+    height, width = image.shape[:2]
+    print(height, width)
 
     generated_images = pipeline(
         prompt=prompt,
-        image=Image.fromarray(resized_image),
-        mask_image=Image.fromarray(resized_mask),
+        image=Image.fromarray(image),
+        mask_image=Image.fromarray(mask),
+        original_size=(height, width),
+        target_size=(height, width),
         num_inference_steps=20,
-        num_images_per_prompt=1,
+        num_images_per_prompt=num_images,
         generator=generator,
     ).images
-
-    output_images = []
-    for generated_image in generated_images:
-        generated_image = np.asarray(generated_image)
-        resized_mask = np.asarray(resized_mask)
-
-        restored_image, restored_mask = restore(generated_image, resized_mask, origin_shape, new_shape)
-
-        restored_mask = np.expand_dims(restored_mask, -1) / 255
-        output_image = restored_image * restored_mask + image * (1 - restored_mask)
-        output_images.append(Image.fromarray(output_image.astype(np.uint8)))
-
-    print("Complete")
-    return output_images[0]
+    return generated_images[0]
 
 
 with gr.Blocks() as app:
@@ -218,22 +150,24 @@ with gr.Blocks() as app:
         prompt = gr.Textbox(
             label="Prompt",
             lines=3,
-            value="a black cat with glowing eyes on the bench, big cat, cute, highly detailed, 8k",
+            value="black cat on the bench, big cat, cute cat, highly detailed, high quality photography",
         )
     with gr.Row():
-        with gr.Tab("Mask"):
-            mask_input_img = gr.Image(
+        with gr.Tab("Drawing Mask"):
+            gr.Markdown("▶ 이미지를 불러온 후 마우스로 원하는 부분을 칠하세요.")
+            input_img_for_drawing = gr.Image(
                 label="Input image",
                 height=600,
                 tool="sketch",
                 source="upload",
                 brush_radius=100,
             )
-            inpaint_btn = gr.Button(value="Inpaint!")
+            drawing_inpaint_btn = gr.Button(value="Inpaint!")
 
-        with gr.Tab("Click"):
+        with gr.Tab("Click Mask"):
+            gr.Markdown("▶ 이미지를 불러온 후 마우스로 원하는 부분을 클릭하세요.")
             with gr.Row():
-                click_input_img = gr.Image(
+                input_img_for_click = gr.Image(
                     label="Input image",
                     height=600,
                 )
@@ -241,13 +175,36 @@ with gr.Blocks() as app:
                 mask_img = gr.Image(
                     label="Mask image",
                     height=600,
+                    show_download_button=True,
                 )
             click_inpaint_btn = gr.Button(value="Inpaint!")
 
     with gr.Row():
-        output_image = gr.Image(label="Output image", height=600)
+        output_img = gr.Image(
+            label="Output image",
+            height=600,
+        )
 
-    inpaint_btn.click(inpaint_from_mask, [mask_input_img, prompt], [output_image])
+    drawing_inpaint_btn.click(
+        inpaint_drawing_mask, [input_img_for_drawing, prompt], [output_img]
+    )
 
-    click_input_img.select(extract_object_by_event, [click_input_img], [mask_img])
-    click_inpaint_btn.click(inpaint_with_mask, [click_input_img, mask_img, prompt], [output_image])
+    input_img_for_click.select(
+        extract_object_by_event, [input_img_for_click], [mask_img]
+    )
+    click_inpaint_btn.click(
+        inpaint_click_mask, [input_img_for_click, mask_img, prompt], [output_img]
+    )
+
+    gr.Markdown("## Image Examples")
+    gr.Examples(
+        examples=[
+            [os.path.join(os.getcwd(), "examples/dog_on_the_bench.png", "examples/mask.png", "black cat on the bench, big cat, cute cat, highly detailed, high quality photography")],
+        ],
+        inputs=[input_img_for_click, mask_img, prompt],
+        outputs=[output_img],
+        fn=inpaint_click_mask,
+        run_on_click=True,
+    )
+
+app.launch(inline=False, share=True, debug=True)

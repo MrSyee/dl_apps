@@ -1,6 +1,6 @@
-from typing import Tuple
 import os
 import urllib
+from typing import Tuple
 
 import cv2
 import gradio as gr
@@ -10,13 +10,10 @@ from diffusers import AutoPipelineForInpainting, UniPCMultistepScheduler
 from PIL import Image
 from segment_anything import SamPredictor, sam_model_registry
 
-
 #############
 # Initialize
 #############
 # Pipeline
-# SD15: runwayml/stable-diffusion-inpainting
-# SDXL: diffusers/stable-diffusion-xl-1.0-inpainting-0.1
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 pipeline = AutoPipelineForInpainting.from_pretrained(
@@ -26,7 +23,10 @@ pipeline.scheduler = UniPCMultistepScheduler.from_config(pipeline.scheduler.conf
 pipeline.enable_vae_tiling()
 
 seed = 7777
-generator = [torch.Generator(device="cuda").manual_seed(seed)]
+num_images = 4
+generator = [
+    torch.Generator(device="cuda").manual_seed(seed + i) for i in range(num_images)
+]
 
 
 # SAM
@@ -34,6 +34,7 @@ CHECKPOINT_PATH = "checkpoint"
 CHECKPOINT_NAME = "sam_vit_h_4b8939.pth"
 CHECKPOINT_URL = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
 MODEL_TYPE = "default"
+
 
 class SAMInferencer:
     def __init__(
@@ -44,7 +45,7 @@ class SAMInferencer:
         model_type: str,
         device: torch.device,
     ):
-        print("[INFO] Initailize inferencer")
+        print("[INFO] Initailize inferencer.")
         if not os.path.exists(checkpoint_path):
             os.makedirs(checkpoint_path, exist_ok=True)
         checkpoint = os.path.join(checkpoint_path, checkpoint_name)
@@ -52,6 +53,7 @@ class SAMInferencer:
             urllib.request.urlretrieve(checkpoint_url, checkpoint)
         sam = sam_model_registry[model_type](checkpoint=checkpoint).to(device)
         self.predictor = SamPredictor(sam)
+        print("[INFO] Initialization complete!")
 
     def inference(
         self,
@@ -82,6 +84,7 @@ sam_inferencer = SAMInferencer(
     CHECKPOINT_PATH, CHECKPOINT_NAME, CHECKPOINT_URL, MODEL_TYPE, DEVICE
 )
 
+
 def extract_object(image: np.ndarray, point_x: int, point_y: int):
     point_coords = np.array([[point_x, point_y], [0, 0]])
     point_label = np.array([1, -1])
@@ -99,12 +102,10 @@ def extract_object(image: np.ndarray, point_x: int, point_y: int):
 
 def extract_object_by_event(image: np.ndarray, evt: gr.SelectData):
     click_x, click_y = evt.index
-
     return extract_object(image, click_x, click_y)
 
 
-
-def inpaint_from_mask(image_dict: Image, prompt: str):
+def inpaint_drawing_mask(image_dict: Image, prompt: str):
     image = image_dict["image"]
     mask = image_dict["mask"]
 
@@ -115,16 +116,15 @@ def inpaint_from_mask(image_dict: Image, prompt: str):
         image=Image.fromarray(image),
         mask_image=Image.fromarray(mask),
         num_inference_steps=20,
-        num_images_per_prompt=1,
+        num_images_per_prompt=num_images,
         original_size=(height, width),
         target_size=(height, width),
-        generator=generator
+        generator=generator,
     ).images
+    return generated_images
 
-    print("Complete")
-    return generated_images[0]
 
-def inpaint_with_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
+def inpaint_click_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
     mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
     _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
@@ -137,12 +137,10 @@ def inpaint_with_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
         original_size=(height, width),
         target_size=(height, width),
         num_inference_steps=20,
-        num_images_per_prompt=1,
+        num_images_per_prompt=num_images,
         generator=generator,
     ).images
-
-    print("Complete")
-    return generated_images[0]
+    return generated_images
 
 
 with gr.Blocks() as app:
@@ -151,22 +149,22 @@ with gr.Blocks() as app:
         prompt = gr.Textbox(
             label="Prompt",
             lines=3,
-            value="a black cat with glowing eyes on the bench, big cat, cute, highly detailed, 8k",
+            value="black cat on the bench, big cat, cute cat, highly detailed, high quality photography",
         )
     with gr.Row():
-        with gr.Tab("Mask"):
-            mask_input_img = gr.Image(
+        with gr.Tab("Drawing Mask"):
+            input_img_for_drawing = gr.Image(
                 label="Input image",
                 height=600,
                 tool="sketch",
                 source="upload",
                 brush_radius=100,
             )
-            inpaint_btn = gr.Button(value="Inpaint!")
+            drawing_inpaint_btn = gr.Button(value="Inpaint!")
 
-        with gr.Tab("Click"):
+        with gr.Tab("Click Mask"):
             with gr.Row():
-                click_input_img = gr.Image(
+                input_img_for_click = gr.Image(
                     label="Input image",
                     height=600,
                 )
@@ -177,13 +175,20 @@ with gr.Blocks() as app:
                 )
             click_inpaint_btn = gr.Button(value="Inpaint!")
 
-
     with gr.Row():
-        output_image = gr.Image(label="Output image", height=600)
+        gallery = gr.Gallery(
+            height=600,
+            show_download_button=True,
+            preview=True,
+        )
 
-    inpaint_btn.click(inpaint_from_mask, [mask_input_img, prompt], [output_image])
+    drawing_inpaint_btn.click(
+        inpaint_drawing_mask, [input_img_for_drawing, prompt], [gallery]
+    )
 
-    click_input_img.select(extract_object_by_event, [click_input_img], [mask_img])
-    click_inpaint_btn.click(inpaint_with_mask, [click_input_img, mask_img, prompt], [output_image])
-
-app.launch(inline=False, share=True)
+    input_img_for_click.select(
+        extract_object_by_event, [input_img_for_click], [mask_img]
+    )
+    click_inpaint_btn.click(
+        inpaint_click_mask, [input_img_for_click, mask_img, prompt], [gallery]
+    )

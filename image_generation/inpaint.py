@@ -25,8 +25,12 @@ def resize_and_pad(
     scale = target_size / max_dim
     new_height = int(height * scale)
     new_width = int(width * scale)
-    image_resized = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
-    mask_resized = cv2.resize(mask, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    image_resized = cv2.resize(
+        image, (new_width, new_height), interpolation=cv2.INTER_LINEAR
+    )
+    mask_resized = cv2.resize(
+        mask, (new_width, new_height), interpolation=cv2.INTER_LINEAR
+    )
 
     # Pad
     pad_image = np.zeros((target_size, target_size, 3), dtype=np.uint8)
@@ -55,8 +59,12 @@ def restore(
 
     # Resize
     origin_height, origin_width = origin_shape
-    image = cv2.resize(image, dsize=(origin_width, origin_height), interpolation=cv2.INTER_LINEAR)
-    mask = cv2.resize(mask, dsize=(origin_width, origin_height), interpolation=cv2.INTER_LINEAR)
+    image = cv2.resize(
+        image, dsize=(origin_width, origin_height), interpolation=cv2.INTER_LINEAR
+    )
+    mask = cv2.resize(
+        mask, dsize=(origin_width, origin_height), interpolation=cv2.INTER_LINEAR
+    )
 
     return image, mask
 
@@ -83,7 +91,9 @@ def inpaint_from_mask(image_dict: Image, prompt: str):
         generated_image = np.asarray(generated_image)
         resized_mask = np.asarray(resized_mask)
 
-        restored_image, restored_mask = restore(generated_image, resized_mask, origin_shape, new_shape)
+        restored_image, restored_mask = restore(
+            generated_image, resized_mask, origin_shape, new_shape
+        )
 
         restored_mask = np.expand_dims(restored_mask, -1) / 255
         output_image = restored_image * restored_mask + image * (1 - restored_mask)

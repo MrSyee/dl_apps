@@ -7,145 +7,115 @@ import torch
 from diffusers import (
     ControlNetModel,
     DiffusionPipeline,
-    EulerDiscreteScheduler,
-    StableDiffusionControlNetPipeline,
+    UniPCMultistepScheduler,
+    EulerAncestralDiscreteScheduler,
+    AutoPipelineForImage2Image,
+    StableDiffusionImg2ImgPipeline,
 )
 from diffusers.utils import load_image
 from PIL import Image
 
 os.makedirs("outputs", exist_ok=True)
 
+WIDTH = 768
+HEIGHT = 1024
+
+DEVICE = "cuda"
+
+# "models/anything_inkBase.safetensors",
+# "models/anythingV3_fp16.ckpt",
 
 def init_pipeline() -> DiffusionPipeline:
-    controlnet = ControlNetModel.from_pretrained(
-        "lllyasviel/sd-controlnet-scribble",
+    pipeline = StableDiffusionImg2ImgPipeline.from_single_file(
+        "models/anythingV3_fp16.ckpt",
         torch_dtype=torch.float16,
-        use_safetensors=True,
-    )
-    pipe = StableDiffusionControlNetPipeline.from_pretrained(
-        "runwayml/stable-diffusion-v1-5",
-        controlnet=controlnet,
-        torch_dtype=torch.float16,
+        variant="fp16",
+        load_safety_checker=False,
         use_safetensors=True,
     ).to("cuda")
 
-    pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config)
-    pipe.enable_model_cpu_offload()
+    pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config)
+    return pipeline
 
-    return pipe
-
-
-pipe = init_pipeline()
-
-# image = load_image(
-#     "https://hf.co/datasets/huggingface/documentation-images/resolve/main/diffusers/input_image_vermeer.png"
-# )
-
-# image = np.array(image)
-
-# low_threshold = 100
-# high_threshold = 200
-
-# image = cv2.Canny(image, low_threshold, high_threshold)
-# image = image[:, :, None]
-# image = np.concatenate([image, image, image], axis=2)
-# canny_image = Image.fromarray(image)
+pipeline = init_pipeline()
 
 
-def generate_image(sketch_image: Image, prompt: str = "", negative_prompt: str = ""):
-    image = sketch_image[:, :, None]
-    image = np.concatenate([image, image, image], axis=2)
-    sketch_image = Image.fromarray(image)
-    sketch_image.save("outputs/sketch_image.png")
+# pipe.save_pretrained(save_path, safe_serialization=True)
+# self.a_prompt = "1girl, masterpiece, best quality, solo, standing, bangs, blush, breasts, choker, closed mouth, cone hair bun, frills, jewelry, long hair, on head, bird, sleeveless, smile, solo, twintails, virtual youtuber"
+# self.n_prompt = "nsfw, multiple girls, 2girls, 3girls, 4girls, (ugly:1.3), (fused fingers), (((cropped))), (bad anatomy:1.5), (watermark:1.5), (words), letters, untracked eyes, asymmetric eyes, floating head, (logo:1.5), (bad hands:1.3), (mangled hands:1.2), (missing hands), (missing arms), backward hands, floating jewelry, unattached jewelry, unattached head, doubled head, head in body, (misshapen body:1.1), (badly fitted headwear:1.2), floating arms, (too many arms:1.5), limbs fused with body, (facial blemish:1.5), badly fitted clothes, imperfect eyes, crossed eyes, hair growing from clothes, partial faces, hair not attached to head"
 
-    outputs = pipe(
+
+def sketch_to_image(sketch: Image.Image, prompt: str):
+    width, height = sketch.size
+    return pipeline(
+        image=sketch,
         prompt=prompt,
-        negative_prompt=negative_prompt,
-        image=sketch_image,
+        negative_prompt="nsfw, multiple girls, 2girls, 3girls, 4girls, ugly, fused fingers, cropped, bad anatomy, watermark, words, letters, untracked eyes, asymmetric eyes, floating head, logo, bad hands, mangled hands, missing hands, missing arms, backward hands, floating jewelry, unattached jewelry, unattached head, doubled head, head in body, misshapen body, badly fitted headwear, floating arms, too many arms, limbs fused with body, facial blemish, badly fitted clothes, imperfect eyes, crossed eyes, hair growing from clothes, partial faces, hair not attached to head",
+        height=height,
+        width=width,
         num_images_per_prompt=4,
-        num_inference_steps=30,
-        controlnet_conditioning_scale=1.0,
-        control_guidance_start=0.0,
-        control_guidance_end=1.0,
+        num_inference_steps=20,
+        strength=0.65,
+        guidance_scale=7.5,
     ).images
-    outputs[0].save("outputs/output.png")
-    return outputs
 
 
 print("[INFO] Gradio app ready")
-with gr.Blocks() as demo:
+with gr.Blocks() as app:
     gr.Markdown("# Sketch to Cartoon Image")
 
     with gr.Row():
         with gr.Column():
-            # sketchpad = gr.Sketchpad(
-            #     label="Handwritten Sketchpad",
-            #     shape=(600, 192),
-            #     brush_radius=2,
-            #     invert_colors=False,
-            # )
-            sketchpad = gr.Image(
-                label="Draw sketch",
-                image_mode="L",
-                source="canvas",
-                interactive=True,
-                height=512,
-                shape=(512, 512),
-                brush_radius=2,
-                invert_colors=False,
-            )
-            prompt = gr.Textbox(label="Prompt")
-            run_button = gr.Button(label="Run")
-            with gr.Accordion("Advanced options", open=False):
-                num_samples = gr.Slider(
-                    label="Images", minimum=1, maximum=12, value=1, step=1
-                )
-                image_resolution = gr.Slider(
-                    label="Image Resolution",
-                    minimum=256,
-                    maximum=768,
-                    value=512,
-                    step=64,
-                )
-                strength = gr.Slider(
-                    label="Control Strength",
-                    minimum=0.0,
-                    maximum=2.0,
-                    value=1.0,
-                    step=0.01,
-                )
-                guess_mode = gr.Checkbox(label="Guess Mode", value=False)
-                ddim_steps = gr.Slider(
-                    label="Steps", minimum=1, maximum=100, value=20, step=1
-                )
-                scale = gr.Slider(
-                    label="Guidance Scale",
-                    minimum=0.1,
-                    maximum=30.0,
-                    value=9.0,
-                    step=0.1,
-                )
-                seed = gr.Slider(
-                    label="Seed", minimum=-1, maximum=2147483647, step=1, randomize=True
-                )
-                eta = gr.Number(label="eta (DDIM)", value=0.0)
-                a_prompt = gr.Textbox(
-                    label="Added Prompt", value="best quality, extremely detailed"
-                )
-                n_prompt = gr.Textbox(
-                    label="Negative Prompt",
-                    value="longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality",
-                )
+            with gr.Tab("Canvas"):
+                with gr.Row():
+                    canvas = gr.Image(
+                        label="Draw",
+                        source="canvas",
+                        image_mode="RGB",
+                        tool="color-sketch",
+                        interactive=True,
+                        width=WIDTH,
+                        height=HEIGHT,
+                        shape=(WIDTH, HEIGHT),
+                        brush_radius=20,
+                        type="pil",
+                    )
+                with gr.Row():
+                    prompt = gr.Textbox(label="Prompt", value="human, masterpiece, best quality, solo, standing", placeholder="Type here")
+                with gr.Row():
+                    canvas_run_btn = gr.Button(label="Run")
+
+            with gr.Tab("File"):
+                with gr.Row():
+                    file = gr.Image(
+                        label="Upload",
+                        source="upload",
+                        image_mode="RGB",
+                        tool="color-sketch",
+                        interactive=True,
+                        width=WIDTH,
+                        height=HEIGHT,
+                        shape=(WIDTH, HEIGHT),
+                        type="pil",
+                    )
+                with gr.Row():
+                    file_run_btn = gr.Button(label="Run")
+
         with gr.Column():
             result_gallery = gr.Gallery(
-                label="Output", elem_id="gallery", rows=2, height="auto"
+                label="Output", elem_id="gallery", rows=2, height=1024
             )
 
-        run_button.click(
-            fn=generate_image,
-            inputs=[sketchpad, prompt, n_prompt],
-            outputs=[result_gallery],
+        canvas_run_btn.click(
+            sketch_to_image,
+            [canvas, prompt],
+            [result_gallery],
+        )
+        file_run_btn.click(
+            sketch_to_image,
+            [file, prompt],
+            [result_gallery],
         )
 
 if __name__ == "__main__":
-    demo.launch(inline=False, share=True)
+    app.launch(inline=False, share=True)

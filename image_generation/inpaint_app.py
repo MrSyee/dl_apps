@@ -109,7 +109,8 @@ def inpaint_drawing_mask(image_dict: Image, prompt: str):
     mask = image_dict["mask"]
 
     height, width = image.shape[:2]
-    print(height, width)
+    print("before", height, width)
+
 
     generated_images = pipeline(
         prompt=prompt,
@@ -121,6 +122,7 @@ def inpaint_drawing_mask(image_dict: Image, prompt: str):
         target_size=(height, width),
         generator=generator,
     ).images
+    print("after", height, width)
     return generated_images[0]
 
 
@@ -129,7 +131,7 @@ def inpaint_click_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
     _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
     height, width = image.shape[:2]
-    print(height, width)
+    print("before", height, width)
 
     generated_images = pipeline(
         prompt=prompt,
@@ -141,6 +143,8 @@ def inpaint_click_mask(image: np.ndarray, mask: np.ndarray, prompt: str):
         num_images_per_prompt=num_images,
         generator=generator,
     ).images
+    width, height = generated_images[0].size
+    print("after", height, width)
     return generated_images[0]
 
 
@@ -155,14 +159,22 @@ with gr.Blocks() as app:
     with gr.Row():
         with gr.Tab("Drawing Mask"):
             gr.Markdown("▶ 이미지를 불러온 후 마우스로 원하는 부분을 칠하세요.")
-            input_img_for_drawing = gr.Image(
-                label="Input image",
-                height=600,
-                tool="sketch",
-                source="upload",
-                brush_radius=100,
-            )
-            drawing_inpaint_btn = gr.Button(value="Inpaint!")
+            with gr.Row():
+                input_img_for_drawing = gr.Image(
+                    label="Input image",
+                    height=600,
+                    tool="sketch",
+                    source="upload",
+                    brush_radius=100,
+                )
+            with gr.Row():
+                drawing_inpaint_btn = gr.Button(value="Inpaint!")
+
+            with gr.Row():
+                drawing_output_img = gr.Image(
+                    label="Output image",
+                    height=600,
+                )
 
         with gr.Tab("Click Mask"):
             gr.Markdown("▶ 이미지를 불러온 후 마우스로 원하는 부분을 클릭하세요.")
@@ -177,34 +189,41 @@ with gr.Blocks() as app:
                     height=600,
                     show_download_button=True,
                 )
-            click_inpaint_btn = gr.Button(value="Inpaint!")
+            with gr.Row():
+                click_inpaint_btn = gr.Button(value="Inpaint!")
 
-    with gr.Row():
-        output_img = gr.Image(
-            label="Output image",
-            height=600,
-        )
+            with gr.Row():
+                click_output_img = gr.Image(
+                    label="Output image",
+                    height=600,
+                )
+
+            # Example
+            gr.Markdown("## Image Examples")
+            with gr.Row():
+                gr.Examples(
+                    examples=[
+                        [
+                            os.path.join(os.getcwd(), "examples/dog_on_the_bench.png"),
+                            os.path.join(os.getcwd(), "examples/mask.png"),
+                            "black cat on the bench, big cat, cute cat, highly detailed, high quality photography",
+                        ],
+                    ],
+                    inputs=[input_img_for_click, mask_img, prompt],
+                    outputs=[click_output_img],
+                    fn=inpaint_click_mask,
+                    run_on_click=True,
+                )
 
     drawing_inpaint_btn.click(
-        inpaint_drawing_mask, [input_img_for_drawing, prompt], [output_img]
+        inpaint_drawing_mask, [input_img_for_drawing, prompt], [drawing_output_img]
     )
 
     input_img_for_click.select(
         extract_object_by_event, [input_img_for_click], [mask_img]
     )
     click_inpaint_btn.click(
-        inpaint_click_mask, [input_img_for_click, mask_img, prompt], [output_img]
-    )
-
-    gr.Markdown("## Image Examples")
-    gr.Examples(
-        examples=[
-            [os.path.join(os.getcwd(), "examples/dog_on_the_bench.png", "examples/mask.png", "black cat on the bench, big cat, cute cat, highly detailed, high quality photography")],
-        ],
-        inputs=[input_img_for_click, mask_img, prompt],
-        outputs=[output_img],
-        fn=inpaint_click_mask,
-        run_on_click=True,
+        inpaint_click_mask, [input_img_for_click, mask_img, prompt], [click_output_img]
     )
 
 app.launch(inline=False, share=True, debug=True)

@@ -3,16 +3,12 @@ from typing import IO
 import os
 import requests
 
-import cv2
 import gradio as gr
-import numpy as np
 import torch
 from diffusers import (
-    DiffusionPipeline,
     EulerAncestralDiscreteScheduler,
     StableDiffusionImg2ImgPipeline,
 )
-from diffusers.utils import load_image
 from PIL import Image
 
 os.makedirs("outputs", exist_ok=True)
@@ -51,7 +47,7 @@ def init_pipeline(model_file: IO) -> str:
     return "Model loaded!"
 
 
-def sketch_to_image(sketch: Image.Image, prompt: str, negative_prompt: str, strength: float):
+def sketch_to_image(sketch: Image.Image, prompt: str, negative_prompt: str):
     width, height = sketch.size
     return PIPELINE(
         image=sketch,
@@ -61,7 +57,7 @@ def sketch_to_image(sketch: Image.Image, prompt: str, negative_prompt: str, stre
         width=width,
         num_images_per_prompt=4,
         num_inference_steps=20,
-        strength=strength,
+        strength=0.65,
         guidance_scale=7.5,
     ).images
 
@@ -94,7 +90,7 @@ def download_model(model_url: str) -> str:
 
 print("[INFO] Gradio app ready")
 with gr.Blocks() as app:
-    gr.Markdown("# Sketch to Image 애플리케이션")
+    gr.Markdown("# 스케치 to 이미지 애플리케이션")
 
     gr.Markdown("## 모델 다운로드")
     with gr.Row():
@@ -115,7 +111,7 @@ with gr.Blocks() as app:
     with gr.Row():
         n_prompt = gr.Textbox(label="Negative Prompt", value=NEGATIVE_PROMPT)
 
-    gr.Markdown("## 이미지 입력")
+    gr.Markdown("## 스케치 to 이미지 생성")
     with gr.Row():
         with gr.Column():
             with gr.Tab("Canvas"):
@@ -156,17 +152,6 @@ with gr.Blocks() as app:
                 label="Output", elem_id="gallery", rows=2, height=768,
             )
 
-    with gr.Row():
-        with gr.Column():
-            with gr.Accordion("Advanced options", open=False):
-                strength = gr.Slider(
-                    label="Strength",
-                    minimum=0.1,
-                    maximum=1.0,
-                    value=0.65,
-                    step=0.01,
-                )
-
     # Event
     download_model_btn.click(
         download_model,
@@ -180,12 +165,12 @@ with gr.Blocks() as app:
     )
     canvas_run_btn.click(
         sketch_to_image,
-        [canvas, prompt, n_prompt, strength],
+        [canvas, prompt, n_prompt],
         [result_gallery],
     )
     file_run_btn.click(
         sketch_to_image,
-        [file, prompt, n_prompt, strength],
+        [file, prompt, n_prompt],
         [result_gallery],
     )
 

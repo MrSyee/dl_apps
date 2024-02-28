@@ -70,9 +70,9 @@ def download_model(model_url: str) -> str:
         response = requests.get(
             f"{ROOT_URL}/api/v1/models/{model_id}", stream=True, timeout=600
         )
-    except Exception as e:
-        print(f"[ERROR] {e}")
-        return
+    except Exception as err:
+        print(f"[ERROR] {err}")
+        raise err
 
     download_url = response.json()["modelVersions"][0]["downloadUrl"]
     filename = response.json()["modelVersions"][0]["files"][0]["name"]

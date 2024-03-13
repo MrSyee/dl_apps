@@ -1,14 +1,10 @@
+import os
 from typing import IO
 
-import os
-import requests
-
 import gradio as gr
+import requests
 import torch
-from diffusers import (
-    EulerAncestralDiscreteScheduler,
-    StableDiffusionImg2ImgPipeline,
-)
+from diffusers import EulerAncestralDiscreteScheduler, StableDiffusionImg2ImgPipeline
 from PIL import Image
 
 os.makedirs("outputs", exist_ok=True)
@@ -42,7 +38,9 @@ def init_pipeline(model_file: IO) -> str:
         use_safetensors=True,
     ).to("cuda")
 
-    PIPELINE.scheduler = EulerAncestralDiscreteScheduler.from_config(PIPELINE.scheduler.config)
+    PIPELINE.scheduler = EulerAncestralDiscreteScheduler.from_config(
+        PIPELINE.scheduler.config
+    )
     print("[INFO] Initialized pipeline")
     return "Model loaded!"
 
@@ -149,7 +147,10 @@ with gr.Blocks() as app:
 
         with gr.Column():
             result_gallery = gr.Gallery(
-                label="Output", elem_id="gallery", rows=2, height=768,
+                label="Output",
+                elem_id="gallery",
+                rows=2,
+                height=768,
             )
 
     # Event

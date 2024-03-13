@@ -84,6 +84,7 @@ sam_inferencer = SAMInferencer(
     CHECKPOINT_PATH, CHECKPOINT_NAME, CHECKPOINT_URL, MODEL_TYPE, DEVICE
 )
 
+
 def extract_object(image: np.ndarray, point_x: int, point_y: int):
     point_coords = np.array([[point_x, point_y], [0, 0]])
     point_label = np.array([1, -1])
@@ -110,7 +111,6 @@ def inpaint_drawing_mask(image_dict: Image, prompt: str):
 
     height, width = image.shape[:2]
     print("before", height, width)
-
 
     generated_images = pipeline(
         prompt=prompt,

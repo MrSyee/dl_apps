@@ -1,0 +1,6 @@
+# model
+sentencepiece             == 0.1.97
+protobuf                  == 3.20.0
+
+# app
+gradio                    == 3.40.0

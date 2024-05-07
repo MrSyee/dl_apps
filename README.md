@@ -12,3 +12,6 @@
 
 ### Speech Recognition: [YouTube Subtitle Generator](speech_recognition)
 ![youtube_subtitle_generator](https://github.com/MrSyee/dl_apps/assets/17582508/4e628115-e7eb-496a-96c7-4d54c0562084)
+
+### Image Generation: [Sketch to Image Generator](image_generation)
+![sketch_to_image](https://github.com/MrSyee/dl_apps/assets/17582508/9f1e60c3-f612-499c-90ed-e42d2a6ad379)

@@ -1,0 +1,6 @@
+# model
+git+https://github.com/facebookresearch/segment-anything.git
+pycocotools               == 2.0.6
+
+# app
+gradio                    == 3.40.0

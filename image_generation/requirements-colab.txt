@@ -1,5 +1,5 @@
-diffusers==0.26.2
-accelerate==0.27.0
+diffusers==0.29.0
+accelerate==0.31.0
 
 # app
 gradio==3.40.0

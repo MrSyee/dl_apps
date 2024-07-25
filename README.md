@@ -1,6 +1,12 @@
 # 쓸모있는 AI 서비스 만들기
 "쓸모있는 AI 서비스 만들기"에서 소개하는 예제들을 정리한 레포입니다.
 
+<img src="https://github.com/user-attachments/assets/4e906e73-8bf2-49ba-9af4-348d05385dec" alt="drawing" width="200"/>
+
+- 교보: https://product.kyobobook.co.kr/detail/S000213842209
+- 예스: https://www.yes24.com/Product/Goods/129119345
+- 알라딘: https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343293888
+
 ## Patch Notes
 - 2024.07.17: Speech Recognition 예제의 pytube 이슈 해결을 위한 셀 추가
   - Speech Recognition 예제에서 pytube 15.0.0 버전에서 변경된 youtube URL을 제대로 처리하지 못하고 에러가 발생.

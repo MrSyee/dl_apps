@@ -8,6 +8,8 @@
 - 알라딘: https://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343293888
 
 ## Patch Notes
+> ⚠️ 라이브러리 버전의 변화, 업데이트 등의 이유로 발생하는 오류로 인해 책 내용과 다르게 수정된 내용이 있습니다. 주기적으로 업데이트할 예정이니 참고바랍니다. 실습 중 문제가 있는 예제가 있다면 [이슈](https://github.com/MrSyee/dl_apps/issues)에 남겨주세요.
+
 - 2024.07.17: Speech Recognition 예제의 pytube 이슈 해결을 위한 셀 추가
   - Speech Recognition 예제에서 pytube 15.0.0 버전에서 변경된 youtube URL을 제대로 처리하지 못하고 에러가 발생.
   - [이슈](https://github.com/pytube/pytube/issues/1954)에서 해결방안이 있으나 공식적으로 pytube 라이브러리에 업데이트 되지 않음.

@@ -1,5 +1,5 @@
 openai-whisper            == 20231106
-pytube                    == 15.0.0
+pytubefix                 == 7.1.3
 
 # app
 gradio                    == 3.40.0

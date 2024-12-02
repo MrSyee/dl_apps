@@ -1,5 +1,6 @@
 diffusers==0.26.2
 accelerate==0.31.0
+huggingface-hub==0.24.5
 
 # app
 gradio==3.40.0
